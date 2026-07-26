@@ -23,18 +23,20 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      # ---- 步骤 2:安装 Node.js ----
+      # ---- 步骤 2:安装 pnpm(必须在 setup-node 之前,否则缓存和后续命令找不到 pnpm)----
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+
+      # ---- 步骤 3:安装 Node.js ----
       - name: 安装 Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20" # 指定 Node 版本
           cache: "pnpm" # 自动缓存 pnpm 依赖,加速后续运行
 
-      # ---- 步骤 3:安装依赖 ----
-      # run 表示"执行一条 shell 命令"
-      # 注意用 pnpm ci 而不是 pnpm install(下面会解释)
+      # ---- 步骤 4:安装依赖 ----
       - name: 安装依赖
-        run: pnpm ci
+        run: pnpm install --frozen-lockfile
 
       # ---- 步骤 4:代码规范检查 ----
       - name: ESLint 检查
