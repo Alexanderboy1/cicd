@@ -1,0 +1,57 @@
+# 流水线的名字,会显示在 GitHub Actions 页面上
+name: LMY-CI
+
+# 什么时候触发这条流水线
+on:
+  push:
+    branches: [main] # 推送到 main 分支时
+  pull_request:
+    branches: [main] # 有人向 main 提 PR 时
+
+jobs:
+  # job 的 id,自己起名
+  build-and-test:
+    # 这个 job 显示的名字
+    name: 代码检查与构建
+    # 用什么操作系统的机器来跑
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---- 步骤 1:把你的代码下载到这台机器上 ----
+      # uses 表示"使用别人写好的 action"
+      # actions/checkout 是官方的"检出代码"动作,@v4 是版本号
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # ---- 步骤 2:安装 Node.js ----
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # 指定 Node 版本
+          cache: "pnpm" # 自动缓存 pnpm 依赖,加速后续运行
+
+      # ---- 步骤 3:安装依赖 ----
+      # run 表示"执行一条 shell 命令"
+      # 注意用 pnpm ci 而不是 pnpm install(下面会解释)
+      - name: 安装依赖
+        run: pnpm ci
+
+      # ---- 步骤 4:代码规范检查 ----
+      - name: ESLint 检查
+        run: pnpm run lint
+
+      # ---- 步骤 5:跑单元测试 ----
+      - name: 运行测试
+        run: pnpm run test
+
+      # ---- 步骤 6:构建 ----
+      - name: 构建生产包
+        run: pnpm run build
+
+      # ---- 步骤 7:把 dist 目录保存下来,方便下载查看 ----
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: dist/
+          retention-days: 7 # 保留 7 天
